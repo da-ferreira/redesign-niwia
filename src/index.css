@@ -1,0 +1,216 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/figtree";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/onest";
+@import "@fontsource-variable/albert-sans";
+@import "@fontsource-variable/schibsted-grotesk";
+@import "@fontsource-variable/ibm-plex-sans";
+
+/* M Saans é paga (Displaay) e não vem do npm: coloque os .woff2 em public/fonts/. */
+@font-face {
+  font-family: 'M Saans';
+  src: local('Saans'), local('M Saans'), url('/fonts/Saans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'M Saans';
+  src: local('Saans Medium'), local('M Saans Medium'), url('/fonts/Saans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tokens NiwIA. Cinzas neutros (croma 0) + um azul só, tirado do "ia" do logo.
+ * O azul marca ação principal, seleção e foco — nunca decoração.
+ */
+:root {
+  --canvas: #ffffff;
+  --surface: #f5f5f5;
+  --surface-hover: #ededed;
+  --raised: #ffffff;
+  --hairline: #ebebeb;
+  --field: #e0e0e0;
+
+  --ink: #0a0a0a;
+  --ink-soft: #3d3d3d;
+  --dim: #737373;
+  --faint: #a0a0a0;
+
+  --brand: #0b4aa2;
+  --brand-hover: #093d86;
+  --brand-ink: #ffffff;
+  --brand-soft: #e8f0fb;
+
+  --ok: #15803d;
+  --caution: #b45309;
+  --danger: #c62828;
+  --live: #0b4aa2;
+
+  --action: var(--ink);
+  --action-ink: var(--canvas);
+}
+
+.dark {
+  --canvas: #0a0a0a;
+  --surface: #111111;
+  --surface-hover: #1a1a1a;
+  --raised: #161616;
+  --hairline: #222222;
+  --field: #333333;
+
+  --ink: #f2f2f2;
+  --ink-soft: #cfcfcf;
+  --dim: #8f8f8f;
+  --faint: #5c5c5c;
+
+  --brand: #3d7fe0;
+  --brand-hover: #5a93e8;
+  --brand-ink: #ffffff;
+  --brand-soft: #0f1c30;
+
+  --ok: #4fbf7a;
+  --caution: #e0a33a;
+  --danger: #ef5b5b;
+  --live: #5a93e8;
+}
+
+/* Estilo Stripe: cinzas levemente frios e o azul assume a ação principal. */
+:root[data-estilo="stripe"] {
+  --surface: #f5f7f9;
+  --surface-hover: #ebeef2;
+  --hairline: #e7eaee;
+  --field: #d7dce2;
+  --ink: #18202a;
+  --ink-soft: #3f4955;
+  --dim: #68727e;
+  --faint: #9aa3ae;
+  --action: var(--brand);
+  --action-ink: #ffffff;
+}
+:root.dark[data-estilo="stripe"] {
+  --canvas: #0c0e12;
+  --surface: #13161b;
+  --surface-hover: #1b1f26;
+  --raised: #161a20;
+  --hairline: #1e232a;
+  --field: #2b313a;
+  --ink: #e8ebef;
+  --ink-soft: #c0c7cf;
+  --dim: #8a929c;
+  --faint: #58606a;
+  --brand: #3d7fe0;
+  --action: var(--brand);
+  --action-ink: #ffffff;
+}
+:root[data-estilo="stripe"] .titulo-pagina { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+
+/* Fontes alternativas, ligadas pelo seletor do protótipo no menu do usuário. */
+:root[data-font="figtree"] { --font-ui: 'Figtree Variable', system-ui, sans-serif; }
+:root[data-font="inter"] { --font-ui: 'Inter', system-ui, sans-serif; }
+:root[data-font="inter-variable"] { --font-ui: 'Inter Variable', system-ui, sans-serif; }
+:root[data-font="system-ui"] { --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+:root[data-font="m-saans"] { --font-ui: 'M Saans', system-ui, sans-serif; }
+:root[data-font="instrument-sans"] { --font-ui: 'Instrument Sans Variable', system-ui, sans-serif; }
+:root[data-font="onest"] { --font-ui: 'Onest Variable', system-ui, sans-serif; }
+:root[data-font="albert-sans"] { --font-ui: 'Albert Sans Variable', system-ui, sans-serif; }
+:root[data-font="schibsted-grotesk"] { --font-ui: 'Schibsted Grotesk Variable', system-ui, sans-serif; }
+:root[data-font="ibm-plex"] { --font-ui: 'IBM Plex Sans Variable', system-ui, sans-serif; }
+
+@theme inline {
+  --font-ui: 'Geist Variable', system-ui, sans-serif;
+  --font-sans: var(--font-ui);
+  --font-heading: var(--font-ui);
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-raised: var(--raised);
+  --color-hairline: var(--hairline);
+  --color-field: var(--field);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-dim: var(--dim);
+  --color-faint: var(--faint);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-ok: var(--ok);
+  --color-caution: var(--caution);
+  --color-danger: var(--danger);
+  --color-live: var(--live);
+  --color-action: var(--action);
+  --color-action-ink: var(--action-ink);
+
+  /* Apelidos do shadcn apontando para os tokens acima. */
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --color-card: var(--canvas);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--raised);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--action);
+  --color-primary-foreground: var(--action-ink);
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface);
+  --color-muted-foreground: var(--dim);
+  --color-accent: var(--surface-hover);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--danger);
+  --color-border: var(--hairline);
+  --color-input: var(--field);
+  --color-ring: var(--brand);
+
+  /* Dois raios: 6px controle, 10px superfície flutuante. */
+  /* Linha ElevenLabs: controle 10px, bloco 16px. */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
+  --radius-4xl: 24px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  body {
+    @apply bg-canvas text-ink text-[14px];
+  }
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+@keyframes dot-wait {
+  0%, 80%, 100% { opacity: .25; }
+  40% { opacity: 1; }
+}
+
+/* Canvas do workflow: linhas no mesmo traço do logo, conectores discretos. */
+.niwia-flow .react-flow__edge-path { stroke: var(--field); stroke-width: 1.5; }
+.niwia-flow .react-flow__edge.selected .react-flow__edge-path { stroke: var(--brand); }
+.niwia-flow .react-flow__edge-text { fill: var(--dim); font-size: 11px; font-family: 'Geist Mono Variable', monospace; }
+.niwia-flow .react-flow__edge-textbg { fill: var(--canvas); }
+.niwia-flow .react-flow__handle { width: 7px; height: 7px; background: var(--canvas); border: 1.5px solid var(--faint); }
+.niwia-flow .react-flow__node.selected .react-flow__handle { border-color: var(--brand); }

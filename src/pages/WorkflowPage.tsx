@@ -40,8 +40,8 @@ function FlowNode({ data, selected }: NodeProps<Node<Data>>) {
       {data.kind !== 'start' && <Handle type="target" position={Position.Top} />}
       <div className="flex items-center gap-2 px-3 pt-2.5 pb-2">
         <k.icon className="size-3.5 text-dim" strokeWidth={1.75} />
-        <span className="font-mono text-[10px] tracking-wide text-faint uppercase">{k.label}</span>
-        {data.tokens != null && <span className="ml-auto font-mono text-[10px] text-faint">{data.tokens} tk</span>}
+        <span className="text-[10px] tracking-wide text-faint uppercase">{k.label}</span>
+        {data.tokens != null && <span className="ml-auto text-[10px] text-faint">{data.tokens} tk</span>}
       </div>
       <div className="px-3 pb-3">
         <p className="text-[13px] font-medium">{data.title}</p>
@@ -113,7 +113,7 @@ function Canvas() {
       </div>
 
       <div className="absolute top-4 left-4 flex items-center gap-2 rounded-md border border-hairline bg-raised px-3 py-1.5 text-xs text-ink-soft shadow-sm">
-        <Dot tone="caution" /> 1 aviso: a fase <span className="font-mono">negociacao</span> não tem saída para recusa.
+        <Dot tone="caution" /> 1 aviso: a fase <span className="font-medium">negociacao</span> não tem saída para recusa.
       </div>
 
       <Sheet open={!!selected} onOpenChange={o => !o && setSelected(null)}>
@@ -121,7 +121,7 @@ function Canvas() {
           {selected && (
             <>
               <SheetHeader className="border-b border-hairline">
-                <span className="font-mono text-[10px] tracking-wide text-faint uppercase">{KIND[selected.data.kind].label}</span>
+                <span className="text-[10px] tracking-wide text-faint uppercase">{KIND[selected.data.kind].label}</span>
                 <SheetTitle>{selected.data.title}</SheetTitle>
                 <SheetDescription>Configuração do nó.</SheetDescription>
               </SheetHeader>

@@ -25,12 +25,15 @@ export const ESTILOS: { value: Estilo; label: string }[] = [
   { value: 'stripe', label: 'Stripe' },
 ]
 
-export type IconSet = 'lucide' | 'phosphor' | 'tabler' | 'hugeicons'
+export type IconSet = 'lucide' | 'phosphor' | 'tabler' | 'hugeicons' | 'remix' | 'iconoir' | 'heroicons'
 
 export const ICON_SETS: { value: IconSet; label: string }[] = [
   { value: 'phosphor', label: 'Phosphor' },
   { value: 'hugeicons', label: 'Hugeicons' },
   { value: 'tabler', label: 'Tabler' },
+  { value: 'remix', label: 'Remix' },
+  { value: 'iconoir', label: 'Iconoir' },
+  { value: 'heroicons', label: 'Heroicons' },
   { value: 'lucide', label: 'Lucide (atual)' },
 ]
 
@@ -51,9 +54,10 @@ const Ctx = createContext<Prefs | null>(null)
 
 export function PrefsProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => read('niwia.theme', 'light'))
-  const [font, setFont] = useState<Font>(() => read('niwia.font', 'geist'))
+  // Fonte não é lembrada: toda entrada e toda troca de estilo voltam para a Inter.
+  const [font, setFont] = useState<Font>('inter')
   const [iconSet, setIconSet] = useState<IconSet>(() => read('niwia.icons', 'phosphor'))
-  const [estilo, setEstilo] = useState<Estilo>(() => read('niwia.estilo', 'atual'))
+  const [estilo, setEstilo] = useState<Estilo>(() => read('niwia.estilo', 'stripe'))
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -62,7 +66,6 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.dataset.font = font
-    write('niwia.font', font)
   }, [font])
 
   useEffect(() => write('niwia.icons', iconSet), [iconSet])
@@ -72,7 +75,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     write('niwia.estilo', estilo)
   }, [estilo])
 
-  return <Ctx.Provider value={{ theme, setTheme, font, setFont, iconSet, setIconSet, estilo, setEstilo }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ theme, setTheme, font, setFont, iconSet, setIconSet, estilo, setEstilo: e => { setEstilo(e); setFont('inter') } }}>{children}</Ctx.Provider>
 }
 
 export function usePrefs() {

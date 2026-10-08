@@ -25,91 +25,105 @@ Confirmar a identidade de {{mailing.nome}} e negociar o débito de {{mailing.val
   comportamento: 'Cobrança — firme e cordial',
 }
 
-export type Conversa = {
-  seq: number
-  aoVivo?: boolean
-  titulo: string
-  origem: 'voz' | 'whatsapp' | 'teste'
-  contato: string
-  hora: string
-  duracaoSeg: number
-  msgs: number
-  finalizacao?: string
-  avaliacao?: 'sucesso' | 'falha'
+export type OrigemConversa = 'voice' | 'whatsapp' | 'test_chat'
+export const ORIGENS: { value: OrigemConversa | 'todas'; label: string }[] = [
+  { value: 'todas', label: 'Conversas' },
+  { value: 'voice', label: 'Ligações' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'test_chat', label: 'Chat de teste' },
+]
+
+// Gerador determinístico: o mesmo filtro devolve sempre os mesmos números.
+export function semente(seed: number) {
+  return () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296
+    return seed / 4294967296
+  }
+}
+export const hashId = (id: string) => [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
+
+// Peso de cada agente no volume e mistura de canais.
+const PERFIL: Record<string, { volume: number; mix: Record<OrigemConversa, number>; sucesso: number; duracaoS: number }> = {
+  b71a3d93: { volume: 1, mix: { voice: 0.86, whatsapp: 0.1, test_chat: 0.04 }, sucesso: 0.71, duracaoS: 142 },
+  c22f0e11: { volume: 0.5, mix: { voice: 0.7, whatsapp: 0.22, test_chat: 0.08 }, sucesso: 0.63, duracaoS: 128 },
+  a91b7c40: { volume: 0.22, mix: { voice: 0.55, whatsapp: 0.42, test_chat: 0.03 }, sucesso: 0.82, duracaoS: 196 },
+}
+export const perfil = (id: string) => PERFIL[id] ?? { volume: 0, mix: { voice: 0, whatsapp: 0, test_chat: 0 }, sucesso: 0, duracaoS: 0 }
+
+// Curva do dia de um discador: começa às 8h, pico no fim da manhã, cai depois das 18h.
+export const CURVA = [0, 0, 0, 0, 0, 0, 0, 0.2, 0.7, 1.1, 1.4, 1.5, 1.1, 1.3, 1.45, 1.3, 1.15, 0.9, 0.5, 0.15, 0, 0, 0, 0]
+export const HORA_AGORA = 14 // "agora" do protótipo: 14:52
+
+export type DiaRef = 'hoje' | 'ontem' | 'semana_passada'
+
+export function serieHoraria(agentesIds: string[], origem: OrigemConversa | 'todas', dia: DiaRef): number[] {
+  const deslocamento = { hoje: 0, ontem: 1, semana_passada: 7 }[dia]
+  return CURVA.map((c, h) => {
+    if (dia === 'hoje' && h > HORA_AGORA) return 0
+    return agentesIds.reduce((soma, id) => {
+      const p = perfil(id)
+      const r = semente(hashId(id) + deslocamento * 97 + h)()
+      const mix = origem === 'todas' ? 1 : p.mix[origem]
+      return soma + Math.round(c * 22 * p.volume * mix * (0.75 + r * 0.5))
+    }, 0)
+  })
 }
 
-export const conversasPorDia: { dia: string; itens: Conversa[] }[] = [
+export type Dia = { conversas: number; avaliadas: number; sucesso: number; duracaoTotalS: number; custoUsd: number }
+
+// Um dia de conversas encerradas de um agente, `n` dias atrás (0 = hoje).
+export function diaDoAgente(id: string, n: number): Dia {
+  const p = perfil(id)
+  const r = semente(hashId(id) * 13 + n * 7919)
+  const fimDeSemana = [0, 6].includes(new Date(2026, 9, 6 - n).getDay())
+  const conversas = Math.round(p.volume * (fimDeSemana ? 70 : 210) * (0.8 + r() * 0.4) * (1 + (90 - Math.min(n, 90)) / 400))
+  const avaliadas = Math.round(conversas * (0.88 + r() * 0.08))
+  const sucesso = Math.round(avaliadas * Math.min(0.97, p.sucesso + (r() - 0.5) * 0.08))
+  return {
+    conversas, avaliadas, sucesso,
+    duracaoTotalS: Math.round(conversas * p.duracaoS * (0.9 + r() * 0.2)),
+    // ~6 mil tokens por conversa, preço médio dos modelos em uso.
+    custoUsd: conversas * 0.0042 * (0.85 + r() * 0.3),
+  }
+}
+
+// Série diária somando os agentes, do mais antigo para o mais recente. `offset` pula dias (período anterior).
+export function serieDiaria(agentesIds: string[], dias: number, offset = 0): Dia[] {
+  return Array.from({ length: dias }, (_, i) => {
+    const n = offset + dias - 1 - i
+    return agentesIds.reduce<Dia>((acc, id) => {
+      const d = diaDoAgente(id, n)
+      return { conversas: acc.conversas + d.conversas, avaliadas: acc.avaliadas + d.avaliadas, sucesso: acc.sucesso + d.sucesso, duracaoTotalS: acc.duracaoTotalS + d.duracaoTotalS, custoUsd: acc.custoUsd + d.custoUsd }
+    }, { conversas: 0, avaliadas: 0, sucesso: 0, duracaoTotalS: 0, custoUsd: 0 })
+  })
+}
+
+// conversations.status = 'in_progress' agora.
+export const aoVivoPorAgente: Record<string, number> = { b71a3d93: 3, c22f0e11: 1, a91b7c40: 0 }
+
+// Catálogo de finalizações (tabela finalizations) e a proporção de cada uma por agente.
+// DESCONHECIDO é a fixa (finalization_id = 0); agente sem catálogo grava NULL e fica de fora.
+export const finalizacoesPorAgente: Record<string, { valor: string; peso: number }[]> = {
+  b71a3d93: [{ valor: 'ACORDO', peso: 0.34 }, { valor: 'PROMESSA', peso: 0.19 }, { valor: 'BOLETO_ENVIADO', peso: 0.16 }, { valor: 'CONTESTACAO', peso: 0.08 }, { valor: 'NUMERO_ERRADO', peso: 0.07 }, { valor: 'DESCONHECIDO', peso: 0.16 }],
+  c22f0e11: [{ valor: 'ACORDO', peso: 0.29 }, { valor: 'PROMESSA', peso: 0.24 }, { valor: 'NUMERO_ERRADO', peso: 0.12 }, { valor: 'DESCONHECIDO', peso: 0.35 }],
+  a91b7c40: [{ valor: 'SEGUNDA_VIA', peso: 0.41 }, { valor: 'DUVIDA_FATURA', peso: 0.33 }, { valor: 'DESCONHECIDO', peso: 0.26 }],
+}
+
+// Sugestões que a tela consegue montar com dado real.
+export const recomendacoes = [
   {
-    dia: 'Hoje',
-    itens: [
-      { seq: 1842, aoVivo: true, titulo: 'Negociação de débito em andamento', origem: 'voz', contato: '+55 11 98765-4321', hora: '14:52', duracaoSeg: 96, msgs: 9 },
-      { seq: 1841, titulo: 'Acordo fechado em 3 parcelas', origem: 'voz', contato: '+55 21 99123-0045', hora: '14:31', duracaoSeg: 248, msgs: 22, finalizacao: 'ACORDO', avaliacao: 'sucesso' },
-      { seq: 1840, titulo: 'Cliente desconhece a dívida', origem: 'voz', contato: '+55 31 98444-7782', hora: '14:12', duracaoSeg: 132, msgs: 14, finalizacao: 'CONTESTACAO', avaliacao: 'sucesso' },
-      { seq: 1839, titulo: 'Boleto enviado pelo WhatsApp', origem: 'whatsapp', contato: '+55 11 97001-2210', hora: '13:47', duracaoSeg: 610, msgs: 31, finalizacao: 'BOLETO_ENVIADO', avaliacao: 'sucesso' },
-      { seq: 1838, titulo: 'Ligação caiu na validação', origem: 'voz', contato: '+55 85 98112-9034', hora: '13:20', duracaoSeg: 41, msgs: 4, finalizacao: 'DESCONHECIDO', avaliacao: 'falha' },
-      { seq: 1837, titulo: 'Teste do prompt novo', origem: 'teste', contato: 'David Ferreira', hora: '12:05', duracaoSeg: 75, msgs: 8 },
-    ],
+    id: 'versao-nao-publicada', agenteId: 'b71a3d93',
+    texto: 'A versão v13 do Claro NET V3 está salva e ainda não foi publicada.', // agent_versions sem published_at
+    acao: 'Revisar e publicar', destino: 'agente',
   },
   {
-    dia: 'Ontem',
-    itens: [
-      { seq: 1836, titulo: 'Pediu para falar com atendente', origem: 'voz', contato: '+55 41 99654-1120', hora: '18:44', duracaoSeg: 58, msgs: 6, finalizacao: 'TRANSFERIDO', avaliacao: 'sucesso' },
-      { seq: 1835, titulo: 'Promessa de pagamento para sexta', origem: 'voz', contato: '+55 11 96320-4471', hora: '17:02', duracaoSeg: 189, msgs: 17, finalizacao: 'PROMESSA', avaliacao: 'sucesso' },
-      { seq: 1834, titulo: 'Número errado', origem: 'voz', contato: '+55 62 98001-3398', hora: '16:15', duracaoSeg: 22, msgs: 3, finalizacao: 'NUMERO_ERRADO' },
-      { seq: 1833, titulo: 'Segunda via da fatura', origem: 'whatsapp', contato: '+55 11 95550-8812', hora: '15:39', duracaoSeg: 302, msgs: 19, finalizacao: 'BOLETO_ENVIADO', avaliacao: 'sucesso' },
-    ],
+    id: 'abandono-fase', agenteId: 'b71a3d93',
+    texto: '12% das ligações de ontem foram abandonadas na fase de validação de identidade.', // status abandoned + last_phase
+    acao: 'Ver as conversas', destino: 'conversas',
   },
-]
-
-export type Turno =
-  | { lado: 'agente'; texto: string; fase: string; hora: string; llmMs?: number; ragMs?: number }
-  | { lado: 'cliente'; texto: string; hora: string }
-  | { lado: 'tool'; nome: string; status: number; ms: number; hora: string }
-
-export const transcricao: Turno[] = [
-  { lado: 'agente', texto: 'Olá, falo com Marcos Oliveira?', fase: 'abertura', hora: '14:31:02' },
-  { lado: 'cliente', texto: 'Sim, é ele.', hora: '14:31:06' },
-  { lado: 'agente', texto: 'Marcos, aqui é a Kora, da Claro NET. Para sua segurança, pode me confirmar os três primeiros dígitos do seu CPF?', fase: 'validacao_de_identidade', hora: '14:31:08', llmMs: 1180, ragMs: 159 },
-  { lado: 'cliente', texto: 'Três, quatro, um.', hora: '14:31:17' },
-  { lado: 'tool', nome: 'consultaDebito', status: 200, ms: 412, hora: '14:31:18' },
-  { lado: 'agente', texto: 'Obrigada. Consta um valor em aberto de cento e oitenta e nove reais. Consegue pagar hoje ou prefere parcelar?', fase: 'negociacao', hora: '14:31:20', llmMs: 1640, ragMs: 121 },
-  { lado: 'cliente', texto: 'Hoje não dá. Consigo dividir em três vezes?', hora: '14:31:31' },
-  { lado: 'agente', texto: 'Consegue sim. Ficam três parcelas de sessenta e três reais, a primeira para o dia dez. Posso confirmar?', fase: 'negociacao', hora: '14:31:34', llmMs: 1320, ragMs: 140 },
-  { lado: 'cliente', texto: 'Pode confirmar.', hora: '14:31:41' },
-  { lado: 'tool', nome: 'registrarAcordo', status: 201, ms: 288, hora: '14:31:42' },
-  { lado: 'agente', texto: 'Pronto, acordo registrado. Você vai receber o boleto por SMS ainda hoje. Obrigada, Marcos, tenha um ótimo dia.', fase: 'encerramento', hora: '14:31:44', llmMs: 1050 },
-]
-
-export const resumoConversa =
-  'O cliente confirmou a identidade pelos três primeiros dígitos do CPF. Informado do débito de R$ 189,00, pediu parcelamento e aceitou três parcelas de R$ 63,00 com primeiro vencimento no dia 10. O acordo foi registrado e o boleto será enviado por SMS.'
-
-// Tela Início — números do dia e da semana, no formato do painel da Stripe.
-export const hojeSerie = [0, 0, 0, 0, 0, 0, 0, 2, 9, 18, 26, 31, 24, 29, 33, 21, 0, 0, 0, 0, 0, 0, 0, 0]
-export const ontemSerie = [0, 0, 0, 0, 0, 0, 0, 3, 11, 15, 22, 27, 19, 25, 30, 28, 24, 17, 9, 0, 0, 0, 0, 0]
-
-export const panorama = [
-  { titulo: 'Ligações atendidas', valor: '1.284', anterior: '1.102 no período anterior', delta: 16.5, serie: [140, 162, 158, 190, 176, 210, 248] },
-  { titulo: 'Taxa de acordo', valor: '38,4%', anterior: '35,1% no período anterior', delta: 3.3, serie: [33, 35, 36, 34, 39, 37, 41] },
-  { titulo: 'Duração média', valor: '2m 18s', anterior: '2m 31s no período anterior', delta: -8.6, serie: [158, 151, 149, 144, 139, 140, 132], invertido: true },
-  { titulo: 'Transferidas para humano', valor: '96', anterior: '121 no período anterior', delta: -20.7, serie: [21, 18, 16, 14, 11, 9, 7], invertido: true },
-]
-
-export const finalizacoesSemana = [
-  { codigo: 'ACORDO', label: 'Acordo', qtd: 493, cor: 'var(--ok)' },
-  { codigo: 'PROMESSA', label: 'Promessa de pagamento', qtd: 268, cor: 'var(--brand)' },
-  { codigo: 'BOLETO_ENVIADO', label: 'Boleto enviado', qtd: 214, cor: '#7c9fd6' },
-  { codigo: 'TRANSFERIDO', label: 'Transferido', qtd: 96, cor: 'var(--caution)' },
-  { codigo: 'OUTROS', label: 'Outros', qtd: 213, cor: 'var(--field)' },
-]
-
-export const falhasRecentes = [
-  { seq: 1838, titulo: 'Ligação caiu na validação', agente: 'Claro NET V3', hora: '13:20' },
-  { seq: 1829, titulo: 'Timeout na consultaDebito', agente: 'Claro D8 Cobrança', hora: '11:02' },
-  { seq: 1811, titulo: 'Cliente não reconheceu a voz', agente: 'Receptivo SAC', hora: '09:47' },
-]
-
-export const agentesAtivos = [
-  { nome: 'Claro NET V3', ligacoes: 742, acordo: 41.2, aoVivo: 3 },
-  { nome: 'Claro D8 Cobrança', ligacoes: 388, acordo: 36.0, aoVivo: 1 },
-  { nome: 'Receptivo SAC', ligacoes: 154, acordo: 0, aoVivo: 0 },
+  {
+    id: 'erro-tool', agenteId: 'c22f0e11',
+    texto: 'A tool consultaDebito falhou em 9 conversas do Claro D8 Cobrança nas últimas 24h.', // tool_error_count
+    acao: 'Ver as conversas', destino: 'conversas',
+  },
 ]

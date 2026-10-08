@@ -1,28 +1,56 @@
 import type { ReactNode } from 'react'
-import { Bell } from 'lucide-react'
+import { useMatch, useNavigate } from 'react-router'
+import { Bell, ChevronLeft } from 'lucide-react'
 import { usePrefs } from '@/lib/prefs'
 import { Icon, type IconName } from '@/components/brand/Icon'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { agentes } from '@/mocks/data'
 import { useShell } from './AppShell'
 import { UserMenu } from './UserMenu'
+
+// Detalhe da ElevenLabs: dentro de um agente, o nome dele e um menu de ações ao lado do alternar menu.
+function AgenteAtual() {
+  const match = useMatch('/agentes/:id/*')
+  const navigate = useNavigate()
+  const agente = match && (agentes.find(a => a.id === match.params.id) ?? agentes[0])
+  if (!agente) return null
+  return (
+    <div className="flex shrink-0 items-center gap-1">
+      <span className="max-w-[220px] truncate px-1 text-[14px] font-medium">{agente.nome}</span>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Ações do agente" />}>
+          <Icon name="more" className="size-[18px]" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuItem className="gap-2.5" onClick={() => navigator.clipboard?.writeText(agente.id)}>
+            <Icon name="copy" /> Copiar ID do agente
+          </DropdownMenuItem>
+          <DropdownMenuItem className="gap-2.5" onClick={() => navigate(`/agentes/${agente.id}/versoes`)}>
+            <Icon name="history" /> Versões
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="gap-2.5" onClick={() => navigate('/agentes')}>
+            <ChevronLeft className="size-4" /> Todos os agentes
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
 
 // Cabeçalho único de toda tela: alternar menu · título · ações · usuário.
 export function PageHeader({ icon, title, after, children }: { icon?: IconName; title: ReactNode; after?: ReactNode; children?: ReactNode }) {
   const { toggle } = useShell()
-  // Estilo Stripe: busca global no lugar do título (o título fica na página) e sem régua.
+  // Estilo Stripe: sem título (ele fica na página) e sem régua.
   if (usePrefs().estilo === 'stripe') {
     return (
       <header className="flex h-16 shrink-0 items-center gap-3 px-5">
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar menu">
           <Icon name="sidebar" className="size-5" />
         </Button>
-        <label className="flex h-9 w-[380px] max-w-full items-center gap-2.5 rounded-lg bg-surface px-3 text-dim focus-within:ring-3 focus-within:ring-brand/20">
-          <Icon name="search" />
-          <input placeholder="Pesquisar conversas, contatos, tools" className="w-full bg-transparent text-[14px] text-ink outline-none placeholder:text-dim" />
-          <kbd className="font-sans text-[11px] text-faint">⌘K</kbd>
-        </label>
+        <AgenteAtual />
         <div className="ml-auto flex shrink-0 items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label="Ajuda"><Icon name="help" className="size-[18px]" /></Button>
           <Button variant="ghost" size="icon" aria-label="Notificações"><Bell className="size-[18px]" strokeWidth={1.5} /></Button>
           <div className="ml-1 flex items-center gap-2">{children}</div>
           <UserMenu />

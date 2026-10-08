@@ -211,7 +211,7 @@ export function AppShell() {
           </nav>
 
           <div className={cn('p-3', collapsed ? 'flex flex-col items-center gap-1 px-3.5' : 'space-y-0.5')}>
-            <FooterItem icon="news" label="Novidades" collapsed={collapsed} extra={<span className="font-mono text-[11px] text-faint">v2.14</span>} />
+            <FooterItem icon="news" label="Novidades" collapsed={collapsed} extra={<span className="text-[11px] text-faint">v2.14</span>} />
             <FooterItem icon="logout" label="Sair" collapsed={collapsed} />
           </div>
         </aside>

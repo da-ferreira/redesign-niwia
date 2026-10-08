@@ -34,7 +34,7 @@ function Swatch({ token, uso }: { token: string; uso: string }) {
     <div className="flex items-center gap-3">
       <span className="size-9 shrink-0 rounded-md border border-hairline" style={{ background: `var(--${token})` }} />
       <div>
-        <p className="font-mono text-xs">{token}</p>
+        <p className="text-xs">{token}</p>
         <p className="text-xs text-dim">{uso}</p>
       </div>
     </div>
@@ -63,7 +63,7 @@ export function FundamentosPage() {
               {TEXTOS.map(([t, u]) => (
                 <div key={t} className="flex items-baseline gap-3">
                   <span className="w-16 text-lg font-medium" style={{ color: `var(--${t})` }}>Aa</span>
-                  <div><p className="font-mono text-xs">{t}</p><p className="text-xs text-dim">{u}</p></div>
+                  <div><p className="text-xs">{t}</p><p className="text-xs text-dim">{u}</p></div>
                 </div>
               ))}
             </div>
@@ -74,7 +74,7 @@ export function FundamentosPage() {
               {ESTADOS.map(([tone, t, u]) => (
                 <div key={t} className="flex items-center gap-3">
                   <span className="flex size-9 items-center justify-center rounded-md border border-hairline"><Dot tone={tone} className="size-2.5" /></span>
-                  <div><p className="font-mono text-xs">{t}</p><p className="text-xs text-dim">{u}</p></div>
+                  <div><p className="text-xs">{t}</p><p className="text-xs text-dim">{u}</p></div>
                 </div>
               ))}
             </div>
@@ -91,13 +91,13 @@ export function FundamentosPage() {
             </div>
           </Section>
 
-          <Section title="Tipografia" hint={`Uma família para a interface (agora: ${FONTS.find(f => f.value === font)?.label}; troque no menu do usuário) e Geist Mono só para dado técnico.`}>
+          <Section title="Tipografia" hint={`Uma família para a interface (agora: ${FONTS.find(f => f.value === font)?.label}; troque no menu do usuário), inclusive no dado técnico.`}>
             <div className="space-y-4">
               <p className="text-2xl font-semibold tracking-tight">Título de tela · 24 semibold</p>
               <p className="text-[13px] font-medium">Título de seção e nome do item · 13 medium</p>
               <p className="text-[13px] text-ink-soft">Corpo e célula de tabela · 13 regular</p>
               <p className="text-xs text-dim">Texto de apoio · 12 regular</p>
-              <p className="font-mono text-xs text-ink-soft">{'{{mailing.nome}}'} · #1842 · llama-3.3-70b · 412 ms</p>
+              <p className="text-xs text-ink-soft">{'{{mailing.nome}}'} · #1842 · llama-3.3-70b · 412 ms</p>
             </div>
           </Section>
 
@@ -113,7 +113,7 @@ export function FundamentosPage() {
               <div className="flex items-center gap-4">
                 <SearchField value="" onChange={() => {}} className="w-72" />
                 <label className="flex items-center gap-2 text-[13px]">Interrompível <Switch defaultChecked /></label>
-                <span className="rounded-sm border border-hairline px-1.5 py-0.5 font-mono text-[11px] text-ink-soft">ACORDO</span>
+                <span className="rounded-sm border border-hairline px-1.5 py-0.5 text-[11px] text-ink-soft">ACORDO</span>
                 <span className="text-[11px] text-faint">Beta</span>
               </div>
             </div>

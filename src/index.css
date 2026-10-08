@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/figtree";
 @import "@fontsource/inter/400.css";
 @import "@fontsource/inter/500.css";
@@ -116,6 +115,7 @@
 :root[data-estilo="stripe"] .titulo-pagina { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
 
 /* Fontes alternativas, ligadas pelo seletor do protótipo no menu do usuário. */
+:root[data-font="geist"] { --font-ui: 'Geist Variable', system-ui, sans-serif; }
 :root[data-font="figtree"] { --font-ui: 'Figtree Variable', system-ui, sans-serif; }
 :root[data-font="inter"] { --font-ui: 'Inter', system-ui, sans-serif; }
 :root[data-font="inter-variable"] { --font-ui: 'Inter Variable', system-ui, sans-serif; }
@@ -128,10 +128,10 @@
 :root[data-font="ibm-plex"] { --font-ui: 'IBM Plex Sans Variable', system-ui, sans-serif; }
 
 @theme inline {
-  --font-ui: 'Geist Variable', system-ui, sans-serif;
+  --font-ui: 'Inter', system-ui, sans-serif;
   --font-sans: var(--font-ui);
   --font-heading: var(--font-ui);
-  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --font-mono: var(--font-ui);
 
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
@@ -210,7 +210,7 @@
 /* Canvas do workflow: linhas no mesmo traço do logo, conectores discretos. */
 .niwia-flow .react-flow__edge-path { stroke: var(--field); stroke-width: 1.5; }
 .niwia-flow .react-flow__edge.selected .react-flow__edge-path { stroke: var(--brand); }
-.niwia-flow .react-flow__edge-text { fill: var(--dim); font-size: 11px; font-family: 'Geist Mono Variable', monospace; }
+.niwia-flow .react-flow__edge-text { fill: var(--dim); font-size: 11px; font-family: var(--font-ui); }
 .niwia-flow .react-flow__edge-textbg { fill: var(--canvas); }
 .niwia-flow .react-flow__handle { width: 7px; height: 7px; background: var(--canvas); border: 1.5px solid var(--faint); }
 .niwia-flow .react-flow__node.selected .react-flow__handle { border-color: var(--brand); }

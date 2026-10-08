@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Braces, ChevronRight, CirclePlus, Globe, MessageCircle, Play, Settings, Volume2, X } from 'lucide-react'
+import { ChevronRight, CirclePlus, Globe, MessageCircle, Play, Settings, Volume2, X } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { VariableField } from '@/components/patterns/VariableField'
 import { Slider } from '@/components/patterns/Slider'
@@ -66,7 +66,7 @@ const Badge = ({ children }: { children: string }) => (
 )
 
 const Kbd = ({ children }: { children: string }) => (
-  <code className="mx-1 rounded border border-field bg-canvas px-1 font-mono text-[11px] text-ink-soft">{children}</code>
+  <code className="mx-1 rounded border border-field bg-canvas px-1 text-[11px] text-ink-soft">{children}</code>
 )
 
 export function AgenteStripePage() {
@@ -83,7 +83,6 @@ export function AgenteStripePage() {
     <>
       <PageHeader title="Agente">
         {dirty && <span className="mr-1 flex items-center gap-2 text-[13px] text-dim"><Dot tone="caution" /> Não salvo</span>}
-        <Button variant="ghost"><Braces /> Variáveis</Button>
         <Button variant="outline"><MessageCircle /> Testar</Button>
         <Button>Publicar</Button>
       </PageHeader>
@@ -191,7 +190,7 @@ export function AgenteStripePage() {
                 <Rotulo titulo="Modelo" hint="Gera as respostas do agente." />
                 <Lista>
                   <Linha>
-                    <span className="font-mono text-[13px]">{agenteAtual.llm}</span>
+                    <span className="text-[13px]">{agenteAtual.llm}</span>
                     <span className="ml-auto"><Badge>Temperatura 0,4</Badge></span>
                   </Linha>
                 </Lista>
